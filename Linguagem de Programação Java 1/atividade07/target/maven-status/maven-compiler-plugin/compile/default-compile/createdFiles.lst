@@ -1,0 +1,9 @@
+atividade07\entities\Passeio.class
+atividade07\exception\VelocException.class
+atividade07\entities\Motor.class
+atividade07\entities\Veiculo.class
+atividade07\utils\Leitura.class
+atividade07\main\Teste.class
+atividade07\exception\VeicExistException.class
+atividade07\entities\Carga.class
+atividade07\entities\Calcular.class
