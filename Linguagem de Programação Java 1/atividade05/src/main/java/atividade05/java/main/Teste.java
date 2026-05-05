@@ -1,12 +1,12 @@
-package atividade04.main;
+package atividade05.main;
 
 import java.io.IOException;
 
-import atividade04.entities.Carga;
-import atividade04.entities.Passeio;
-import atividade04.utils.Leitura;
+import atividade05.entities.Carga;
+import atividade05.entities.Passeio;
+import atividade05.utils.Leitura;
 
-// mvn exec:java -Dexec.mainClass="atividade04.main.Teste"
+// mvn exec:java -Dexec.mainClass="atividade05.main.Teste"
 
 public class Teste {
 

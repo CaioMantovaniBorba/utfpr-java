@@ -8,8 +8,6 @@ import atividade07.exception.VeicExistException;
 import atividade07.exception.VelocException;
 import atividade07.utils.Leitura;
 
-// cd "c:\git\utfpr-java\Linguagem de Programação Java 1\atividade07" && mvn exec:java -Dexec.mainClass="atividade07.main.Teste"
-
 public class Teste {
 	private static final int TAMANHO_MAXIMO = 5;
 	private static final float VELOCIDADE_PADRAO_PASSEIO = 100;
