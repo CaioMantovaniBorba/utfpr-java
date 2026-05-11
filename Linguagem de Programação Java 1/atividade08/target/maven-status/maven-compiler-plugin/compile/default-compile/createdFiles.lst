@@ -1,0 +1,10 @@
+atividade08\utils\Leitura.class
+atividade08\entities\BDVeiculo.class
+atividade08\exception\VelocException.class
+atividade08\main\Teste.class
+atividade08\entities\Carga.class
+atividade08\entities\Calcular.class
+atividade08\entities\Motor.class
+atividade08\exception\VeicExistException.class
+atividade08\entities\Passeio.class
+atividade08\entities\Veiculo.class
