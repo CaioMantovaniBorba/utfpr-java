@@ -1,0 +1,7 @@
+br\edu\utfpr\javai\avaliacao\interfaces\Verifica.class
+br\edu\utfpr\javai\avaliacao\exception\NumException.class
+br\edu\utfpr\javai\avaliacao\entities\ClienteBanco.class
+br\edu\utfpr\javai\avaliacao\main\TstConta.class
+br\edu\utfpr\javai\avaliacao\utils\Endereco.class
+br\edu\utfpr\javai\avaliacao\entities\PessoaFisica.class
+br\edu\utfpr\javai\avaliacao\entities\PessoaJuridica.class
