@@ -1,0 +1,98 @@
+-- Questão 01: Obter o nome do cantor que possui o menor número de gravações (deve exibir todos os nomes de cantores que tenham o valor mínimo).
+
+SELECT c.nome_cantor,
+       COUNT(*) AS num_gravacoes
+FROM cantor c
+JOIN gravacao g
+    ON c.cod_cantor = g.cod_cantor
+GROUP BY c.cod_cantor, c.nome_cantor
+HAVING COUNT(*) = (
+    SELECT MIN(total_gravacoes)
+    FROM (
+        SELECT COUNT(*) AS total_gravacoes
+        FROM gravacao
+        GROUP BY cod_cantor
+    ) t
+);
+
+-- Questão 02: Obter o nome do cantor que gravou com o maior número de gravadoras diferentes.
+
+SELECT c.nome_cantor,
+       COUNT(DISTINCT g.cod_gravadora) AS num_gravadoras
+FROM cantor c
+JOIN gravacao g
+    ON c.cod_cantor = g.cod_cantor
+GROUP BY c.cod_cantor, c.nome_cantor
+HAVING COUNT(DISTINCT g.cod_gravadora) = (
+    SELECT MAX(total_gravadoras)
+    FROM (
+        SELECT COUNT(DISTINCT cod_gravadora) AS total_gravadoras
+        FROM gravacao
+        GROUP BY cod_cantor
+    ) t
+);
+
+-- Questão 03: Obter o nome do cantor que possui a maior média de duração de gravações.
+
+SELECT c.nome_cantor,
+       AVG(m.duracao) AS media
+FROM cantor c
+JOIN gravacao g
+    ON c.cod_cantor = g.cod_cantor
+JOIN musica m
+    ON g.cod_musica = m.cod_musica
+GROUP BY c.cod_cantor, c.nome_cantor
+HAVING AVG(m.duracao) = (
+    SELECT MAX(media_duracao)
+    FROM (
+        SELECT AVG(m.duracao) AS media_duracao
+        FROM gravacao g
+        JOIN musica m
+            ON g.cod_musica = m.cod_musica
+        GROUP BY g.cod_cantor
+    ) t
+);
+
+-- Questão 04: Selecionar os cantores que nunca gravaram música com a gravadora Sony.
+
+SELECT c.nome_cantor
+FROM cantor c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM gravacao g
+    JOIN gravadora gr
+        ON g.cod_gravadora = gr.cod_gravadora
+    WHERE g.cod_cantor = c.cod_cantor
+      AND gr.nome_gravadora = 'Sony'
+);
+
+-- Questão 05: Selecione o nome das músicas, nome dos cantores e as datas de gravação, para as gravações do ano de 2004.
+
+SELECT m.titulo,
+       c.nome_cantor,
+       g.data_gravacao
+FROM gravacao g
+JOIN cantor c
+    ON g.cod_cantor = c.cod_cantor
+JOIN musica m
+    ON g.cod_musica = m.cod_musica
+WHERE YEAR(g.data_gravacao) = 2004;
+
+-- Questão 06: Selecione o nome de cada cantor e a data da sua última gravação em ordem decrescente de data. Caso não tenha gravado nada, a data deve aparecer em branco.
+
+SELECT c.nome_cantor,
+       MAX(g.data_gravacao) AS ultima_gravacao
+FROM cantor c
+LEFT JOIN gravacao g
+    ON c.cod_cantor = g.cod_cantor
+GROUP BY c.cod_cantor, c.nome_cantor
+ORDER BY ultima_gravacao DESC;
+
+-- Questão 07: Dadas as tabelas pessoa e fone, retorne os números de telefone residencial, comercial e Celular de cada pessoa. O retorno deve conter uma linha para cada pessoa, com a coluna ‘nome’, seguida dos números.
+
+SELECT p.nome_pessoa, l.numero AS celular, r.numero AS fone_residencial, c.numero AS fone_comercial
+FROM pessoa AS p
+JOIN fone AS l ON p.cod_pessoa = l.cod_pessoa AND l.tipo = 'L'
+JOIN fone AS r ON p.cod_pessoa = r.cod_pessoa AND r.tipo = 'R'
+JOIN fone AS c ON p.cod_pessoa = c.cod_pessoa AND c.tipo = 'C'
+GROUP BY p.cod_pessoa;
