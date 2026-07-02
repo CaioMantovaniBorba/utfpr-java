@@ -1,6 +1,6 @@
 package br.edu.utfpr.dominio;
 
-public interface ContaBancaria {
+public sealed interface ContaBancaria permits ContaPessoaFisica, ContaPessoaJuridica {
 
     // TODO revisar e implementar corretamente conforme requisitos
 

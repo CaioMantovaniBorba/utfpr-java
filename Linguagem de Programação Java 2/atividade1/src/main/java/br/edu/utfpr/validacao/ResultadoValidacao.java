@@ -2,14 +2,19 @@ package br.edu.utfpr.validacao;
 
 import java.util.List;
 
-public interface ResultadoValidacao {
+public sealed interface ResultadoValidacao permits ResultadoValidacao.Valido, ResultadoValidacao.Invalido {
 
-    class Valido() implements ResultadoValidacao {
+    record Valido() implements ResultadoValidacao {
         // TODO revisar e implementar corretamente conforme requisitos
     }
 
-    class Invalido() implements ResultadoValidacao {
+    record Invalido(List<Violacao> violacoes) implements ResultadoValidacao {
         // TODO revisar e implementar corretamente conforme requisitos
+        public Invalido {
+            if (violacoes == null || violacoes.isEmpty()) {
+                throw new IllegalArgumentException("a lista de violacoes nao pode ser nula ou vazia");
+            }
+        }
     }
 
     static ResultadoValidacao de(List<Violacao> violacoes) {
