@@ -15,4 +15,8 @@ public class DepartamentosService {
     public List<Departamentos> listarTodosDepartamentos() {
         return repository.findAll();
     }
+
+    public Departamentos listarPrimeiroDepartamento() {
+        return repository.findFirstByOrderByCodDepartamentoAsc();
+    }
 }

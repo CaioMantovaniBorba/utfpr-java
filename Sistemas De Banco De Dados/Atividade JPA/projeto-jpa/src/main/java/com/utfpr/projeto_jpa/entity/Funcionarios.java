@@ -7,6 +7,15 @@ import lombok.Data;
 
 @Entity
 @Table(name = "Funcionarios")
+@NamedQuery(
+        name = "Funcionarios.listarPorQtdDependentes",
+        query = "SELECT f FROM Funcionarios f WHERE f.qtdDependentes = :qtdDependentes"
+)
+@NamedNativeQuery(
+        name = "Funcionarios.listarPorNomeContendo",
+        query = "SELECT * FROM Funcionarios WHERE nome LIKE CONCAT('%', :nome, '%')",
+        resultClass = Funcionarios.class
+)
 @Data
 public class Funcionarios {
 
