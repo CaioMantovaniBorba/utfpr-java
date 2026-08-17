@@ -4,6 +4,7 @@ import com.utfpr.projeto_jpa.entity.Funcionarios;
 import com.utfpr.projeto_jpa.repository.FuncionariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,6 +13,11 @@ import java.util.List;
 public class FuncionariosService {
     @Autowired
     private FuncionariosRepository repository;
+
+    @Transactional
+    public void aumentarSalarioFuncionarios(Integer percentual) {
+        repository.aumentarSalarioFuncionarios(percentual);
+    }
 
     public List<Funcionarios> listarTodosFuncionarios() {
         return repository.findAll();
@@ -23,6 +29,20 @@ public class FuncionariosService {
 
     public List<Funcionarios> listarPorDepartamento(Integer codDepartamento) {
         return repository.listarPorDepartamento(codDepartamento);
+    }
+
+    public List<Funcionarios> listarPorDepartamentoSemDependentes(Integer codDepartamento) {
+        return repository.listarPorDepartamentoSemDependentes(codDepartamento);
+    }
+
+    @Transactional
+    public int trocarDepartamentoDosFuncionarios(Integer codDepartamentoOrigem, Integer codDepartamentoDestino) {
+        return repository.trocarDepartamentoDosFuncionarios(codDepartamentoOrigem, codDepartamentoDestino);
+    }
+
+    @Transactional
+    public int excluirFuncionariosPorDepartamento(Integer codDepartamento) {
+        return repository.excluirPorDepartamento(codDepartamento);
     }
 
     public Funcionarios listarFuncionarioComMaiorSalario() {
