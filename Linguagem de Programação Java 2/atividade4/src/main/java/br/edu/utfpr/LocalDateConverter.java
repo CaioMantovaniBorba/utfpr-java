@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter;
 public class LocalDateConverter extends AbstractBeanField<String, LocalDate> {
 
     // TODO qual formato usar aqui?
-    private static final String FORMATO = "";
+    private static final String FORMATO = "dd/MM/yyyy";
 
     @Override
     public LocalDate convert(String value) {
