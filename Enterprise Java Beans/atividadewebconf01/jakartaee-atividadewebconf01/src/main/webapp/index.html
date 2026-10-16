@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Próximo número primo</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #f3f5f9; color: #172033; margin: 0; padding: 24px; }
+        main { max-width: 520px; margin: 10vh auto; padding: 32px; background: white; border-radius: 16px; box-shadow: 0 8px 32px #17203312; }
+        h1 { margin-top: 0; }
+        p { line-height: 1.6; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; }
+        input, button { box-sizing: border-box; width: 100%; font: inherit; padding: 12px; border-radius: 8px; }
+        input { border: 1px solid #7c879a; }
+        button { border: 0; background: #244ac4; color: white; margin-top: 16px; cursor: pointer; }
+        button:disabled { opacity: .65; cursor: wait; }
+        #resultado { min-height: 3em; font-weight: 600; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Próximo número primo</h1>
+    <p>Informe um número inteiro para encontrar o primeiro primo maior que ele.</p>
+    <form id="formulario">
+        <label for="numero">Número inteiro</label>
+        <input id="numero" name="numero" type="number" min="-2147483648" max="2147483647" step="1" required placeholder="Ex.: 8" aria-describedby="limites">
+        <button type="submit">Calcular próximo primo</button>
+    </form>
+    <p id="resultado" role="status" aria-live="polite"></p>
+    <p>Exemplos: 8 → 11 / 7 → 11</p>
+</main>
+<script>
+    const formulario = document.getElementById('formulario');
+    const resultado = document.getElementById('resultado');
+    const botao = formulario.querySelector('button');
+    formulario.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        botao.disabled = true;
+        resultado.textContent = 'Calculando…';
+        try {
+            const numero = document.getElementById('numero').value;
+            const resposta = await fetch('rest/primos?numero=' + encodeURIComponent(numero));
+            const dados = await resposta.json();
+            if (!resposta.ok) {
+                throw new Error(dados.erro || 'Não foi possível calcular o próximo primo.');
+            }
+            resultado.textContent = `O próximo primo após ${dados.numero} é ${dados.proximoPrimo}.`;
+        } catch (erro) {
+            resultado.textContent = erro instanceof TypeError
+                ? 'Não foi possível conectar ao servidor. Tente novamente.' : erro.message;
+        } finally {
+            botao.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
