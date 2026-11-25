@@ -1,7 +1,34 @@
 package local.redes;
 
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.StandardProtocolFamily;
+import java.net.StandardSocketOptions;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
+// @author Caio Mantovani Borba
 public class BatePapo extends javax.swing.JFrame {
+    private static final int PORTA = 50000;
+    private static final String GRUPO = "224.1.1.20";
+    private final String identificador = UUID.randomUUID() + "\n";
+    private final ByteBuffer buffer = ByteBuffer.allocate(65507);
+    private final BlockingQueue<String> fila = new LinkedBlockingQueue<>();
+    private final Timer leitura = new Timer(50, evento -> receber());
+    private DatagramChannel cliente;
+    private DatagramChannel servidor;
+    private String usuario;
  
 
     /**
@@ -9,6 +36,13 @@ public class BatePapo extends javax.swing.JFrame {
      */
     public BatePapo() {
         initComponents();
+        TfEndereco.setText(GRUPO);
+        TfEndereco.setEditable(false);
+        TfPorta.setText(Integer.toString(PORTA));
+        TfPorta.setEditable(false);
+        TaTexto.setEnabled(true);
+        TaTexto.setEditable(false);
+        habilitarConversa(false);
     }
 
     /**
@@ -128,13 +162,132 @@ public class BatePapo extends javax.swing.JFrame {
     
 
     private void BtConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtConectarActionPerformed
-    
+        usuario = TfUsuario.getText().trim();
+        if (usuario.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe seu nome de usuário.");
+            return;
+        }
+        try {
+            InetAddress grupo = InetAddress.getByName(GRUPO);
+            NetworkInterface rede = interfaceMulticast(grupo);
+            InetSocketAddress destino = new InetSocketAddress(grupo, PORTA);
+            servidor = DatagramChannel.open(StandardProtocolFamily.INET);
+            servidor.setOption(StandardSocketOptions.IP_MULTICAST_IF, rede);
+            servidor.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, true);
+            servidor.bind(new InetSocketAddress(0));
+
+            cliente = DatagramChannel.open(StandardProtocolFamily.INET);
+            cliente.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            cliente.bind(new InetSocketAddress(PORTA));
+            cliente.join(grupo, rede);
+            cliente.configureBlocking(false);
+
+            new Thread(() -> servir(destino), "servidor-multicast").start();
+            leitura.start();
+            habilitarConversa(true);
+            TfTexto.requestFocusInWindow();
+        } catch (IOException ex) {
+            desconectar();
+            JOptionPane.showMessageDialog(this, "Falha ao conectar: " + ex.getMessage());
+        }
     }//GEN-LAST:event_BtConectarActionPerformed
 
     private void BtEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtEnviarActionPerformed
-        // TODO add your handling code here:
-        
+        String texto = TfTexto.getText().trim();
+        if (texto.isEmpty()) {
+            return;
+        }
+        if ((identificador + usuario + " diz: " + texto).getBytes(StandardCharsets.UTF_8).length > buffer.capacity()) {
+            JOptionPane.showMessageDialog(this, "A mensagem excede o tamanho de um datagrama UDP.");
+            return;
+        }
+        fila.add(texto);
+        TfTexto.setText("");
+        if ("Sair".equalsIgnoreCase(texto)) {
+            BtEnviar.setEnabled(false);
+            TfTexto.setEnabled(false);
+        }
     }//GEN-LAST:event_BtEnviarActionPerformed
+
+    private static NetworkInterface interfaceMulticast(InetAddress grupo) throws IOException {
+        try (DatagramChannel rota = DatagramChannel.open(StandardProtocolFamily.INET)) {
+            rota.connect(new InetSocketAddress(grupo, PORTA));
+            InetAddress local = ((InetSocketAddress) rota.getLocalAddress()).getAddress();
+            NetworkInterface rede = NetworkInterface.getByInetAddress(local);
+            if (rede != null && rede.supportsMulticast()) {
+                return rede;
+            }
+        } catch (java.net.NoRouteToHostException ex) {
+        }
+        for (NetworkInterface rede : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+            if (rede.isUp() && rede.supportsMulticast() &&
+                    Collections.list(rede.getInetAddresses()).stream().anyMatch(Inet4Address.class::isInstance)) {
+                return rede;
+            }
+        }
+        throw new IOException("Nenhuma interface IPv4 com multicast disponível.");
+    }
+
+    private void servir(InetSocketAddress destino) {
+        try {
+            while (true) {
+                String texto = fila.take();
+                String mensagem = usuario + " diz: " + texto;
+                servidor.send(StandardCharsets.UTF_8.encode(identificador + mensagem), destino);
+                if ("Sair".equalsIgnoreCase(texto)) {
+                    break;
+                }
+            }
+        } catch (IOException ex) {
+            SwingUtilities.invokeLater(() -> TaTexto.append("Falha no envio: " + ex.getMessage() + "\n"));
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        } finally {
+            SwingUtilities.invokeLater(this::desconectar);
+        }
+    }
+
+    private void receber() {
+        try {
+            for (int i = 0; i < 64; i++) {
+                buffer.clear();
+                if (cliente.receive(buffer) == null) {
+                    return;
+                }
+                buffer.flip();
+                String pacote = StandardCharsets.UTF_8.decode(buffer).toString();
+                int separador = pacote.indexOf('\n');
+                if (separador >= 0 && !pacote.startsWith(identificador)) {
+                    TaTexto.append(pacote.substring(separador + 1) + "\n");
+                }
+            }
+        } catch (IOException ex) {
+            leitura.stop();
+            TaTexto.append("Falha na recepção: " + ex.getMessage() + "\n");
+        }
+    }
+
+    private void habilitarConversa(boolean conectado) {
+        TfUsuario.setEditable(!conectado);
+        BtConectar.setEnabled(!conectado);
+        TfTexto.setEnabled(conectado);
+        BtEnviar.setEnabled(conectado);
+    }
+
+    private void desconectar() {
+        leitura.stop();
+        for (DatagramChannel canal : new DatagramChannel[] {cliente, servidor}) {
+            if (canal != null) {
+                try {
+                    canal.close();
+                } catch (IOException ex) {
+                    TaTexto.append("Falha ao fechar o canal: " + ex.getMessage() + "\n");
+                }
+            }
+        }
+        fila.clear();
+        habilitarConversa(false);
+    }
 
     /**
      * @param args the command line arguments
